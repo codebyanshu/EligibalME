@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 42 33% 97%;
+    --foreground: 222 36% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 36% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 36% 14%;
+    --primary: 222 38% 16%;
+    --primary-foreground: 40 30% 98%;
+    --secondary: 40 24% 93%;
+    --secondary-foreground: 222 30% 18%;
+    --muted: 40 20% 93%;
+    --muted-foreground: 220 10% 42%;
+    --accent: 30 92% 52%;
+    --accent-foreground: 28 60% 12%;
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 38 18% 88%;
+    --input: 38 18% 88%;
+    --ring: 30 92% 52%;
+    --chart-1: 30 92% 52%;
+    --chart-2: 158 42% 32%;
+    --chart-3: 222 38% 30%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 60% 55%;
+    --radius: 0.9rem;
+    --font-heading: "Inter", "Noto Sans Gurmukhi", "Noto Sans Devanagari", system-ui, sans-serif;
+    --font-body: "Inter", "Noto Sans Gurmukhi", "Noto Sans Devanagari", system-ui, sans-serif;
+    --font-display: "Fraunces", "Noto Sans Gurmukhi", "Noto Sans Devanagari", Georgia, serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --ink: 222 40% 13%;
+    --paper: 42 33% 97%;
+    --saffron: 30 92% 52%;
+    --leaf: 158 40% 30%;
+    --sidebar-background: 42 30% 96%;
+    --sidebar-foreground: 222 30% 20%;
+    --sidebar-primary: 222 38% 16%;
+    --sidebar-primary-foreground: 40 30% 98%;
+    --sidebar-accent: 40 24% 92%;
+    --sidebar-accent-foreground: 222 30% 18%;
+    --sidebar-border: 38 18% 88%;
+    --sidebar-ring: 30 92% 52%;
+  }
+
+  .dark {
+    --background: 222 32% 9%;
+    --foreground: 40 30% 96%;
+    --card: 222 30% 12%;
+    --card-foreground: 40 30% 96%;
+    --popover: 222 30% 12%;
+    --popover-foreground: 40 30% 96%;
+    --primary: 40 30% 96%;
+    --primary-foreground: 222 32% 10%;
+    --secondary: 222 20% 18%;
+    --secondary-foreground: 40 30% 96%;
+    --muted: 222 20% 18%;
+    --muted-foreground: 40 12% 68%;
+    --accent: 30 92% 55%;
+    --accent-foreground: 28 60% 10%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 18% 22%;
+    --input: 222 18% 22%;
+    --ring: 30 92% 55%;
+    --ink: 40 30% 96%;
+    --paper: 222 32% 9%;
+    --leaf: 158 42% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    background-image:
+      radial-gradient(1200px 520px at 12% -10%, hsl(30 92% 52% / 0.09), transparent 65%),
+      radial-gradient(900px 460px at 92% 0%, hsl(158 40% 30% / 0.08), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: hsl(var(--saffron) / 0.25);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+    font-variation-settings: "SOFT" 0, "WONK" 0;
+  }
+
+  .rise {
+    animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .scroll-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 999px;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
