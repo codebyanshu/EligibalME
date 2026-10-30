@@ -9,12 +9,13 @@ import json
 import shutil
 import subprocess
 from contextlib import asynccontextmanager
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -45,6 +46,51 @@ def clean(value: Any) -> str:
     return re.sub(r"\s+", " ", str(value or "").replace("\ufeff", " ")).strip()
 
 
+def field_value(row: dict[str, str], *names: str) -> str:
+    normalized = {re.sub(r"[^a-z0-9]+", "", key.casefold()): value for key, value in row.items()}
+    for name in names:
+        key = re.sub(r"[^a-z0-9]+", "", name.casefold())
+        if normalized.get(key):
+            return normalized[key]
+    return ""
+
+
+def split_values(value: str, split_commas: bool = False) -> list[str]:
+    value = clean(value)
+    if not value:
+        return []
+    if value.startswith("["):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, list):
+                return list(dict.fromkeys(clean(item) for item in parsed if clean(item)))
+        except ValueError:
+            pass
+    pattern = r"[;,|\n•]+" if split_commas else r"[;|\n•]+"
+    return list(dict.fromkeys(part.strip() for part in re.split(pattern, value) if part.strip()))
+
+
+def parse_date(value: str) -> str | None:
+    value = clean(value)
+    if not value:
+        return None
+    for parser in (date.fromisoformat, lambda text: datetime.fromisoformat(text.replace("Z", "+00:00")).date()):
+        try:
+            return parser(value[:10]).isoformat()
+        except ValueError:
+            continue
+    return None
+
+
+def normalize_status(value: str) -> str:
+    status = clean(value).casefold()
+    if status in {"open", "active", "accepting applications", "applications open"}:
+        return "open"
+    if status in {"closed", "inactive", "expired", "applications closed"}:
+        return "closed"
+    return "unknown"
+
+
 def read_catalog(path: Path) -> tuple[list[dict[str, Any]], dict[str, int]]:
     if not path.is_file():
         raise RuntimeError(f"Scheme CSV not found: {path}")
@@ -63,6 +109,10 @@ def read_catalog(path: Path) -> tuple[list[dict[str, Any]], dict[str, int]]:
                 "slug", "scheme_name", "details", "benefits", "eligibility", "application",
                 "documents", "level", "schemeCategory", "tags",
             ))
+            key += tuple(field_value(row, column).casefold() for column in (
+                "applicable_states", "districts", "department", "official_source_url",
+                "application_steps", "application_status", "deadline", "last_verified_at",
+            ))
             if key in seen:
                 duplicates += 1
                 continue
@@ -79,6 +129,15 @@ def read_catalog(path: Path) -> tuple[list[dict[str, Any]], dict[str, int]]:
                 "category": row.get("schemeCategory", ""),
                 "tags": row.get("tags", ""),
                 "source_row": source_row,
+                # Optional enrichment columns remain empty/unknown if the source CSV lacks them.
+                "applicable_states": split_values(field_value(row, "applicable_states", "applicable states", "state", "states", "state/ut"), split_commas=True),
+                "districts": split_values(field_value(row, "districts", "district"), split_commas=True),
+                "department": field_value(row, "department", "managed_by", "managed by", "ministry"),
+                "official_source_url": field_value(row, "official_source_url", "official source url", "source_url", "source url"),
+                "application_steps": split_values(field_value(row, "application_steps", "application steps", "steps_to_apply")),
+                "application_status": normalize_status(field_value(row, "application_status", "application status", "status")),
+                "deadline": parse_date(field_value(row, "deadline", "application_deadline", "application deadline")),
+                "last_verified_at": parse_date(field_value(row, "last_verified_at", "last verified at", "last_verified", "last verified")),
             }
             searchable = "\n".join(
                 f"{label}: {value}"
@@ -98,6 +157,20 @@ def read_catalog(path: Path) -> tuple[list[dict[str, Any]], dict[str, int]]:
                 if urlparse(url).scheme == "https" and urlparse(url).netloc:
                     urls.append(url)
             record["urls"] = list(dict.fromkeys(urls))[:4]
+            official_url = urlparse(record["official_source_url"])
+            if official_url.scheme != "https" or not official_url.netloc:
+                record["official_source_url"] = ""
+            record["required_documents"] = split_values(record["documents"], split_commas=True)
+            record["metadata_completeness"] = {
+                "state": bool(record["applicable_states"]),
+                "district": bool(record["districts"]),
+                "department": bool(record["department"]),
+                "official_source": bool(record["official_source_url"]),
+                "application_steps": bool(record["application_steps"]),
+                "application_status": record["application_status"] != "unknown",
+                "deadline": bool(record["deadline"]),
+                "last_verified_at": bool(record["last_verified_at"]),
+            }
             rows.append(record)
 
     if not rows:
@@ -223,6 +296,55 @@ class Catalog:
         results.sort(key=lambda item: item["score"], reverse=True)
         return results[: request.limit]
 
+    def filter_records(
+        self, *, query: str = "", state: str = "", category: str = "",
+        department: str = "", application_status: str = "", offset: int = 0, limit: int = 50,
+    ) -> tuple[list[dict[str, Any]], int]:
+        query, state = clean(query).casefold(), clean(state).casefold()
+        category, department = clean(category).casefold(), clean(department).casefold()
+        status = normalize_status(application_status) if application_status else ""
+        matches = []
+        for row in self.rows:
+            if query and query not in row["search_text"].casefold():
+                continue
+            if category and category not in row["category"].casefold():
+                continue
+            if department and department not in row["department"].casefold():
+                continue
+            if status and row["application_status"] != status:
+                continue
+            if state:
+                if row["level"] == "central":
+                    row["state_match"] = "all_india"
+                elif row["applicable_states"]:
+                    if not any(state == item.casefold() or item.casefold() == "all india" for item in row["applicable_states"]):
+                        continue
+                    row["state_match"] = "structured"
+                else:
+                    region_text = " ".join((row["name"], row["details"], row["eligibility"], row["application"])).casefold()
+                    if state not in region_text:
+                        continue
+                    row["state_match"] = "text"
+            else:
+                row["state_match"] = "not_filtered"
+            matches.append(row)
+        return matches[offset:offset + limit], len(matches)
+
+    def filter_options(self) -> dict[str, list[str]]:
+        categories = set()
+        departments = set()
+        states = set()
+        statuses = set()
+        for row in self.rows:
+            categories.update(split_values(row["category"], split_commas=True))
+            if row["department"]:
+                departments.add(row["department"])
+            states.update(row["applicable_states"])
+            if row["application_status"] != "unknown":
+                statuses.add(row["application_status"])
+        return {"categories": sorted(categories), "departments": sorted(departments),
+                "states": sorted(states), "applicationStatuses": sorted(statuses)}
+
 
 catalog: Catalog | None = None
 
@@ -253,7 +375,31 @@ def public_record(row: dict[str, Any]) -> dict[str, Any]:
         "benefits": row["benefits"][:700], "eligibility": row["eligibility"][:700],
         "application": row["application"][:700], "documents": row["documents"][:500],
         "score": round(row["score"], 4), "sourceRow": row["source_row"],
-        "sourceUrls": row["urls"], "eligibilityStatus": "needs_official_verification",
+        "sourceUrls": row["urls"], "officialSourceUrl": row["official_source_url"],
+        "applicableStates": row["applicable_states"], "districts": row["districts"],
+        "department": row["department"], "applicationSteps": row["application_steps"],
+        "requiredDocuments": row["required_documents"], "applicationStatus": row["application_status"],
+        "deadline": row["deadline"], "lastVerifiedAt": row["last_verified_at"],
+        "metadataCompleteness": row["metadata_completeness"],
+        "eligibilityStatus": "needs_official_verification",
+        "stateMatch": row.get("state_match", "not_filtered"),
+    }
+
+
+def public_catalog_record(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": row["id"], "title": row["name"], "level": row["level"],
+        "category": row["category"], "summary": row["details"],
+        "benefits": row["benefits"], "eligibility": row["eligibility"],
+        "application": row["application"], "documents": row["documents"],
+        "sourceUrls": row["urls"], "officialSourceUrl": row["official_source_url"],
+        "applicableStates": row["applicable_states"], "districts": row["districts"],
+        "department": row["department"], "applicationSteps": row["application_steps"],
+        "requiredDocuments": row["required_documents"], "applicationStatus": row["application_status"],
+        "deadline": row["deadline"], "lastVerifiedAt": row["last_verified_at"],
+        "metadataCompleteness": row["metadata_completeness"], "sourceRow": row["source_row"],
+        "eligibilityStatus": "needs_official_verification",
+        "stateMatch": row.get("state_match", "not_filtered"),
     }
 
 
@@ -270,6 +416,30 @@ def recommend(payload: SearchRequest) -> dict[str, Any]:
         "recommendations": [public_record(row) for row in hits],
         "notice": "Text relevance is not an eligibility decision. Verify the rules and source with the scheme authority.",
     }
+
+
+@app.get("/filters")
+def filters() -> dict[str, list[str]]:
+    return get_catalog().filter_options()
+
+
+@app.get("/schemes")
+def list_schemes(
+    query: str = Query(default="", max_length=MAX_QUERY_LENGTH),
+    state: str = Query(default="", max_length=80),
+    category: str = Query(default="", max_length=120),
+    department: str = Query(default="", max_length=200),
+    application_status: str = Query(default="", alias="applicationStatus", pattern="^(|open|closed|unknown)$"),
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=100),
+) -> dict[str, Any]:
+    rows, total = get_catalog().filter_records(
+        query=query, state=state, category=category, department=department,
+        application_status=application_status, offset=offset, limit=limit,
+    )
+    return {"schemes": [public_catalog_record(row) for row in rows], "total": total,
+            "offset": offset, "limit": limit,
+            "notice": "Missing metadata is left unknown; confirm scheme details and eligibility with the official source."}
 
 
 def extractive_answer(rows: list[dict[str, Any]], language: str) -> str:
@@ -333,7 +503,7 @@ def ask(payload: SearchRequest) -> dict[str, Any]:
     generated_answer = generate_answer(clean(payload.question), payload.language, rows)
     answer = generated_answer or extractive_answer(rows, payload.language)
     citations = [
-        {"id": row["id"], "source": f"Imported scheme catalogue · row {row['source_row']}: {row['name']}", "link": row["urls"][0] if row["urls"] else None}
+        {"id": row["id"], "source": f"Imported scheme catalogue · row {row['source_row']}: {row['name']}", "link": row["official_source_url"] or None}
         for row in rows
     ]
     return {"answer": answer, "citations": citations, "retrieved": len(rows), "generated": generated_answer is not None}

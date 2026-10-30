@@ -22,7 +22,16 @@ export default function CatalogRecommendations({ recommendations, lang, copy }) 
             benefit: record.benefits,
             eligibility: record.eligibility,
             docs: (record.documents || "").split(/[,;|\n•]+/).map((item) => item.trim()).filter(Boolean),
-            link: record.sourceUrls?.[0] || "",
+            // Do not surface unverified legacy URLs from the imported CSV.
+            link: record.officialSourceUrl || "",
+            officialSourceUrl: record.officialSourceUrl,
+            applicationText: record.application,
+            applicationSteps: record.applicationSteps || [],
+            department: record.department,
+            deadline: record.deadline,
+            lastVerifiedAt: record.lastVerifiedAt,
+            applicationStatus: record.applicationStatus,
+            linkIsOfficial: Boolean(record.officialSourceUrl),
             category: record.category,
           };
 

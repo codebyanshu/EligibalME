@@ -67,6 +67,15 @@ export default function useNavigator(lang = "en") {
                 citations: retrieved.citations || [],
                 sourceNotice: !retrieved.generated,
               });
+              if (profile.state) {
+                discoverWebSchemes(profile.state, trimmed)
+                  .then((live) => {
+                    if (live?.results?.length) push({ role: "bot", type: "webDiscovery", results: live.results });
+                  })
+                  .catch(() => {
+                    // Live search is optional when Agent Reach is unavailable on the API host.
+                  });
+              }
               return;
             }
           } catch {

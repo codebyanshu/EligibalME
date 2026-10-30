@@ -83,9 +83,15 @@ export default function SchemeCard({ row, lang, copy }) {
           )}
         </div>
 
+        {catalog && (scheme.applicationSteps.length > 0 || scheme.applicationText || scheme.department || scheme.deadline || scheme.lastVerifiedAt) && <div>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{copy.nextStepsTitle}</p>
+          {scheme.applicationSteps.length > 0 ? <ol className="mt-1.5 list-decimal space-y-1 pl-4 text-xs leading-relaxed text-foreground/80">{scheme.applicationSteps.map((step, index) => <li key={`${step}-${index}`}>{step}</li>)}</ol> : scheme.applicationText && <p className="mt-1.5 whitespace-pre-line text-xs leading-relaxed text-foreground/80">{scheme.applicationText}</p>}
+          {(scheme.department || scheme.deadline || scheme.lastVerifiedAt) && <p className="mt-2 text-[10px] text-muted-foreground">{[scheme.department, scheme.deadline && `${copy.deadlineLabel}: ${scheme.deadline}`, scheme.lastVerifiedAt && `${copy.lastVerifiedLabel}: ${scheme.lastVerifiedAt}`].filter(Boolean).join(" · ")}</p>}
+        </div>}
+
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
           {scheme.link && <a href={scheme.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl bg-ink px-3.5 py-2 text-xs font-medium text-paper transition hover:opacity-90">
-            {catalog ? copy.catalogApplicationLink : copy.applyCta} <ArrowUpRight className="h-3.5 w-3.5" />
+            {catalog ? (scheme.linkIsOfficial ? copy.catalogOfficialSourceLink : copy.catalogApplicationLink) : copy.applyCta} <ArrowUpRight className="h-3.5 w-3.5" />
           </a>}
           {(scheme.dept || scheme.category) && <span className="text-[10px] text-muted-foreground">{scheme.dept || scheme.category}</span>}
         </div>

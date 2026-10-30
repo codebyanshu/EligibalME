@@ -65,6 +65,22 @@ export default function ChatMessage({ msg, lang, copy, active, stepIndex, totalS
 
         {msg.type === "results" && <ResultsBlock msg={msg} lang={lang} copy={copy} />}
 
+        {msg.type === "webDiscovery" && (
+          <section className="mt-3 space-y-2 rounded-2xl border border-saffron/25 bg-saffron/5 p-4">
+            <div>
+              <h3 className="font-display text-base">{copy.webDiscoveryTitle}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{copy.webDiscoveryNotice}</p>
+            </div>
+            {msg.results.map((item) => (
+              <article key={item.url} className="rounded-xl border border-border bg-card p-3">
+                <a href={item.url} target="_blank" rel="noreferrer" className="text-sm font-medium text-foreground underline decoration-saffron/50 underline-offset-2">{item.title}</a>
+                <p className="mt-1 text-[11px] text-muted-foreground">{item.source}</p>
+                {item.snippet && <p className="mt-2 text-xs leading-relaxed text-foreground/80">{item.snippet}</p>}
+              </article>
+            ))}
+          </section>
+        )}
+
         {msg.type === "answer" && (
           <AnswerBlock text={msg.text} citations={msg.citations} copy={copy} local={msg.local} sourceNotice={msg.sourceNotice} />
         )}
