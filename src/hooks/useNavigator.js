@@ -3,11 +3,12 @@ import { ALL_SCHEMES, getScheme, schemesForQuestion } from "@/data/schemes";
 import { rankSchemes } from "@/lib/eligibility";
 import { answerLocally } from "@/lib/answerEngine";
 import { base44 } from "@/api/base44Client";
+import { askCatalog, discoverWebSchemes, getCatalogRecommendations, hasSchemeApi } from "@/lib/schemeApi";
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 export const PROFILE_KEY = "haqdaar.profile";
 
-const STEPS = ["age", "gender", "occupation", "category", "income", "district"];
+const STEPS = ["age", "gender", "occupation", "category", "income", "state"];
 
 export default function useNavigator(lang = "en") {
   const [messages, setMessages] = useState([]);
@@ -55,6 +56,23 @@ export default function useNavigator(lang = "en") {
       push({ role: "user", type: "text", text: trimmed });
       setPending(true);
       try {
+        if (hasSchemeApi) {
+          try {
+            const retrieved = await askCatalog(trimmed, lang, consent ? profile : { state: profile.state });
+            if (retrieved?.answer) {
+              push({
+                role: "bot",
+                type: "answer",
+                text: retrieved.answer,
+                citations: retrieved.citations || [],
+                sourceNotice: !retrieved.generated,
+              });
+              return;
+            }
+          } catch {
+            // Keep the existing Base44 assistant available if the retrieval API is offline.
+          }
+        }
         const shortcutIds = schemesForQuestion(trimmed, 4);
         const matchIds = rankSchemes(ALL_SCHEMES, profile)
           .slice(0, 3)
@@ -72,6 +90,7 @@ export default function useNavigator(lang = "en") {
                 categories: profile.categories,
                 incomeBand: profile.incomeBand,
                 district: profile.district,
+                state: profile.state,
               }
             : null,
         });
@@ -96,12 +115,30 @@ export default function useNavigator(lang = "en") {
   );
 
   const finish = useCallback(
-    (finalProfile) => {
+    async (finalProfile) => {
       setStep("chat");
       const ranked = rankSchemes(ALL_SCHEMES, finalProfile);
       const eligible = ranked.filter((r) => r.tier === "eligible");
       const check = ranked.filter((r) => r.tier === "check");
-      push({ role: "bot", type: "results", eligible, check });
+      let catalogMatches = [];
+      let webDiscoveries = [];
+      if (hasSchemeApi) {
+        setPending(true);
+        try {
+          catalogMatches = await getCatalogRecommendations("", finalProfile);
+        } catch {
+          // Rule-based recommendations remain available if the catalogue service is offline.
+        } finally {
+          setPending(false);
+        }
+        try {
+          const discovery = await discoverWebSchemes(finalProfile.state);
+          webDiscoveries = discovery?.results || [];
+        } catch {
+          // Agent Reach is optional and may not be installed on this API host.
+        }
+      }
+      push({ role: "bot", type: "results", eligible, check, catalogMatches, webDiscoveries });
       push({ role: "bot", type: "suggestions" });
       if (consent) {
         localStorage.setItem(PROFILE_KEY, JSON.stringify(finalProfile));
@@ -155,6 +192,18 @@ export default function useNavigator(lang = "en") {
         nextStep(current);
         return;
       }
+      if (current === "state") {
+        const nextProfile = { ...profile, state: value };
+        setProfile(nextProfile);
+        push({ role: "user", type: "text", text: value });
+        if (value === "Punjab") {
+          setStep("district");
+          push({ role: "bot", type: "question", step: "district" });
+        } else {
+          finish(nextProfile);
+        }
+        return;
+      }
       if (current === "district") {
         const finalProfile = { ...profile, district: value };
         setProfile(finalProfile);
@@ -191,15 +240,16 @@ export default function useNavigator(lang = "en") {
   }, []);
 
   const stepIndex = useMemo(() => {
+    if (step === "district" && profile.state === "Punjab") return STEPS.length + 1;
     const i = STEPS.indexOf(step);
     return i >= 0 ? i + 1 : 0;
-  }, [step]);
+  }, [profile.state, step]);
 
   return {
     messages,
     step,
     stepIndex,
-    totalSteps: STEPS.length,
+    totalSteps: STEPS.length + (profile.state === "Punjab" ? 1 : 0),
     profile,
     consent,
     pending,

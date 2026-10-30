@@ -80,3 +80,13 @@ export const CATEGORY_GROUPS = [
   { key: "worker", label: { en: "Workers & livelihood", hi: "श्रमिक व आजीविका", pa: "ਮਜ਼ਦੂਰ ਤੇ ਰੋਜ਼ੀ-ਰੋਟੀ" } },
   { key: "housing", label: { en: "Housing", hi: "आवास", pa: "ਘਰ" } },
 ];
+
+export const INDIAN_STATES_AND_UTS = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
+  "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
+  "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+  "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh",
+  "Lakshadweep", "Puducherry",
+];

@@ -66,7 +66,7 @@ export default function ChatMessage({ msg, lang, copy, active, stepIndex, totalS
         {msg.type === "results" && <ResultsBlock msg={msg} lang={lang} copy={copy} />}
 
         {msg.type === "answer" && (
-          <AnswerBlock text={msg.text} citations={msg.citations} copy={copy} local={msg.local} />
+          <AnswerBlock text={msg.text} citations={msg.citations} copy={copy} local={msg.local} sourceNotice={msg.sourceNotice} />
         )}
 
         {msg.type === "sourcesOnly" && <SourcesList citations={msg.citations} copy={copy} />}

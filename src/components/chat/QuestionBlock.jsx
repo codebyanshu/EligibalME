@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LANGUAGES, GENDERS, OCCUPATIONS, CATEGORIES, INCOME_BANDS, DISTRICTS } from "@/data/taxonomy";
+import { LANGUAGES, GENDERS, OCCUPATIONS, CATEGORIES, INCOME_BANDS, DISTRICTS, INDIAN_STATES_AND_UTS } from "@/data/taxonomy";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 
@@ -10,6 +10,7 @@ const PROMPTS = {
   occupation: "qOccupation",
   category: "qCategory",
   income: "qIncome",
+  state: "qState",
   district: "qDistrict",
 };
 
@@ -37,6 +38,7 @@ export default function QuestionBlock({ msg, lang, copy, active, stepIndex, tota
   const [age, setAge] = useState("");
   const [cats, setCats] = useState([]);
   const [district, setDistrict] = useState("");
+  const [state, setState] = useState("");
 
   const prompt = copy[PROMPTS[step]] || "";
   const numbered = stepIndex > 0;
@@ -136,6 +138,18 @@ export default function QuestionBlock({ msg, lang, copy, active, stepIndex, tota
             className="inline-flex items-center gap-1.5 rounded-xl bg-ink px-4 py-2 text-sm text-paper transition hover:opacity-90 disabled:opacity-40"
           >
             {copy.next} <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      {step === "state" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <select value={state} disabled={disabled} onChange={(e) => setState(e.target.value)} className="max-w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-saffron/60">
+            <option value="">{copy.selectState}</option>
+            {INDIAN_STATES_AND_UTS.map((name) => <option key={name} value={name}>{name}</option>)}
+          </select>
+          <button type="button" disabled={disabled || !state} onClick={() => onAnswer("state", state)} className="inline-flex items-center gap-1.5 rounded-xl bg-ink px-4 py-2.5 text-sm text-paper transition hover:opacity-90 disabled:opacity-40">
+            {copy.stateAction} <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
       )}

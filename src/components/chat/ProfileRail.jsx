@@ -1,6 +1,6 @@
 import { ArrowRight, Lock, RotateCcw, Sparkles } from "lucide-react";
 import { SCHEME_COUNT } from "@/data/schemes";
-import { GENDERS, INCOME_BANDS, OCCUPATIONS, CATEGORIES } from "@/data/taxonomy";
+import { GENDERS, OCCUPATIONS, CATEGORIES } from "@/data/taxonomy";
 import { labelOf, bandOf } from "@/lib/eligibility";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +61,7 @@ export default function ProfileRail({ copy, lang, profile, consent, stepIndex, t
               value={(profile.categories || []).map((k) => labelOf(CATEGORIES, k, lang)).join(", ")}
             />
             <Row label={copy.profileIncome} value={band ? band.label[lang] : ""} />
+            <Row label={copy.profileState} value={profile.state} />
             <Row label={copy.profileDistrict} value={profile.district} />
           </div>
           <button

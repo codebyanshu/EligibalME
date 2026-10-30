@@ -60,3 +60,9 @@ GitHub integration: [https://docs.base44.com/developers/app-code/local-developme
 Local development: [https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview)
 
 Support: [https://app.base44.com/support](https://app.base44.com/support)
+
+## State-aware web discovery
+
+The scheme finder asks for an Indian state or union territory. Its imported catalogue still reflects the rows in `updated_data.csv`; optional broader web search is served by the separate FastAPI service in `recommendation_api/`.
+
+To enable those web results locally, install Agent Reach on the same host that runs the API by following its [official installation guide](https://github.com/Panniantong/agent-reach/blob/main/docs/install.md), then confirm the `web` channel is available with `agent-reach channels`. The API uses the read-only `agent-reach web search` channel for state-specific queries. Agent Reach is an internet access CLI, not an exhaustive crawler; returned pages are displayed as unverified search leads. Verify scheme details and eligibility with the relevant government department.

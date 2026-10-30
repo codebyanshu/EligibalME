@@ -1,7 +1,7 @@
 import SourcesList from "./SourcesList";
 import { BookOpenCheck } from "lucide-react";
 
-export default function AnswerBlock({ text, citations, copy, local }) {
+export default function AnswerBlock({ text, citations, copy, local, sourceNotice }) {
   return (
     <div className="space-y-2.5">
       <div className="rounded-2xl rounded-tl-md border border-border bg-card px-4 py-3 shadow-sm">
@@ -11,6 +11,7 @@ export default function AnswerBlock({ text, citations, copy, local }) {
         </div>
         <p className="whitespace-pre-line text-[14.5px] leading-relaxed text-foreground/90">{text}</p>
         {local && <p className="mt-2 text-[10px] text-muted-foreground">{copy.localNote}</p>}
+        {sourceNotice && <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">{copy.ragNotice}</p>}
       </div>
       <SourcesList citations={citations} copy={copy} />
     </div>
