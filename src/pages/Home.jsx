@@ -6,6 +6,7 @@ import ChatMessage from "@/components/chat/ChatMessage";
 import ChatComposer from "@/components/chat/ChatComposer";
 import ProfileRail from "@/components/chat/ProfileRail";
 import { cn } from "@/lib/utils";
+import { ClipboardCheck, FileText, Search } from "lucide-react";
 
 export default function Home() {
   const { lang, setLang } = useOutletContext();
@@ -117,6 +118,26 @@ export default function Home() {
           <ChatComposer copy={copy} pending={nav.pending} enabled={nav.step === "chat"} onAsk={nav.askQuestion} />
         </section>
       </div>
+
+      <section className="mt-14 rounded-3xl border border-border/70 bg-card/55 px-5 py-9 sm:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="font-display text-3xl font-semibold text-foreground">{lang === "hi" ? "यह कैसे काम करता है" : lang === "pa" ? "ਇਹ ਕਿਵੇਂ ਕੰਮ ਕਰਦਾ ਹੈ" : "How it works"}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{lang === "hi" ? "योजनाएं खोजें, आधिकारिक पोर्टल पर आवेदन करें और अपनी प्रगति दर्ज रखें।" : lang === "pa" ? "ਸਕੀਮਾਂ ਲੱਭੋ, ਸਰਕਾਰੀ ਪੋਰਟਲ 'ਤੇ ਅਰਜ਼ੀ ਦਿਓ ਅਤੇ ਆਪਣੀ ਤਰੱਕੀ ਦਰਜ ਕਰੋ।" : "Discover schemes, apply through official portals, and keep track of your progress."}</p>
+        </div>
+        <div className="mx-auto mt-9 grid max-w-5xl gap-8 md:grid-cols-3">
+          {[
+            { icon: Search, title: lang === "hi" ? "योजनाएं खोजें" : lang === "pa" ? "ਸਕੀਮਾਂ ਲੱਭੋ" : "Discover schemes", body: lang === "hi" ? "अपनी जानकारी के आधार पर योजनाएं और पात्रता विवरण देखें।" : lang === "pa" ? "ਆਪਣੀ ਜਾਣਕਾਰੀ ਅਨੁਸਾਰ ਸਕੀਮਾਂ ਅਤੇ ਯੋਗਤਾ ਵੇਖੋ।" : "Explore schemes and eligibility details based on your profile." },
+            { icon: FileText, title: lang === "hi" ? "आधिकारिक पोर्टल पर आवेदन करें" : lang === "pa" ? "ਸਰਕਾਰੀ ਪੋਰਟਲ 'ਤੇ ਅਰਜ਼ੀ ਦਿਓ" : "Apply online", body: lang === "hi" ? "ज़रूरी दस्तावेज़ तैयार करें और योजना के आधिकारिक पोर्टल पर जाएं।" : lang === "pa" ? "ਲੋੜੀਂਦੇ ਦਸਤਾਵੇਜ਼ ਤਿਆਰ ਕਰੋ ਅਤੇ ਸਕੀਮ ਦੇ ਸਰਕਾਰੀ ਪੋਰਟਲ 'ਤੇ ਜਾਓ।" : "Prepare required documents and continue on the scheme's official portal." },
+            { icon: ClipboardCheck, title: lang === "hi" ? "प्रगति दर्ज करें" : lang === "pa" ? "ਤਰੱਕੀ ਦਰਜ ਕਰੋ" : "Track progress", body: lang === "hi" ? "अपनी आवेदन स्थिति और अगली कार्रवाई को निजी तौर पर ट्रैक करें।" : lang === "pa" ? "ਆਪਣੀ ਅਰਜ਼ੀ ਦੀ ਸਥਿਤੀ ਅਤੇ ਅਗਲਾ ਕਦਮ ਨਿੱਜੀ ਤੌਰ 'ਤੇ ਟਰੈਕ ਕਰੋ।" : "Keep a private record of application status and your next steps." },
+          ].map(({ icon: Icon, title, body }) => (
+            <article key={title} className="text-center">
+              <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-saffron/10 text-saffron"><Icon className="h-6 w-6" /></span>
+              <h3 className="mt-4 font-semibold text-foreground">{title}</h3>
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">{body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

@@ -13,7 +13,7 @@ function localMatches(query, level, state, category, department, status) {
   const searched = query ? searchSchemes(query) : ALL_SCHEMES;
   return searched.filter((scheme) => {
     if (level !== "all" && scheme.level !== level) return false;
-    if (state && scheme.level !== "central" && !(state === "Punjab" && scheme.level === "state")) return false;
+    if (state && scheme.level !== "central" && !scheme.applicableStates?.includes(state)) return false;
     if (category && scheme.group !== category) return false;
     if (department && !scheme.dept?.toLowerCase().includes(department.toLowerCase())) return false;
     const schemeStatus = scheme.applicationStatus || "unknown";
@@ -150,7 +150,11 @@ export default function SchemesPage() {
               </p>
             </>
           );
-          return link ? <a key={scheme.id} href={link} target="_blank" rel="noreferrer" className="group flex flex-col justify-between rounded-2xl border border-border bg-card p-4 transition hover:-translate-y-0.5 hover:shadow-md">{card}<ArrowUpRight className="sr-only" /></a> : <article key={scheme.id} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-4">{card}</article>;
+          const trackUrl = `/applications?scheme=${encodeURIComponent(scheme.id)}&name=${encodeURIComponent(name)}${link ? `&url=${encodeURIComponent(link)}` : ""}`;
+          return <article key={scheme.id} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-4">
+            {link ? <a href={link} target="_blank" rel="noreferrer" className="group flex flex-col justify-between transition hover:-translate-y-0.5">{card}<ArrowUpRight className="sr-only" /></a> : card}
+            <Link to={trackUrl} className="mt-3 border-t border-border/70 pt-2.5 text-xs font-medium text-leaf hover:underline">{copy.trackApplication}</Link>
+          </article>;
         })}
       </div>
 

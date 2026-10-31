@@ -62,7 +62,6 @@ export default function ProfileRail({ copy, lang, profile, consent, stepIndex, t
             />
             <Row label={copy.profileIncome} value={band ? band.label[lang] : ""} />
             <Row label={copy.profileState} value={profile.state} />
-            <Row label={copy.profileDistrict} value={profile.district} />
           </div>
           <button
             type="button"

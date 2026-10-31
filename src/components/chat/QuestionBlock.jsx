@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LANGUAGES, GENDERS, OCCUPATIONS, CATEGORIES, INCOME_BANDS, DISTRICTS, INDIAN_STATES_AND_UTS } from "@/data/taxonomy";
+import { LANGUAGES, GENDERS, OCCUPATIONS, CATEGORIES, INCOME_BANDS, INDIAN_STATES_AND_UTS } from "@/data/taxonomy";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 
@@ -11,7 +11,6 @@ const PROMPTS = {
   category: "qCategory",
   income: "qIncome",
   state: "qState",
-  district: "qDistrict",
 };
 
 const HINTS = { age: "qAgeHint", category: "qCategoryHint" };
@@ -37,7 +36,6 @@ export default function QuestionBlock({ msg, lang, copy, active, stepIndex, tota
   const step = msg.step;
   const [age, setAge] = useState("");
   const [cats, setCats] = useState([]);
-  const [district, setDistrict] = useState("");
   const [state, setState] = useState("");
 
   const prompt = copy[PROMPTS[step]] || "";
@@ -154,31 +152,6 @@ export default function QuestionBlock({ msg, lang, copy, active, stepIndex, tota
         </div>
       )}
 
-      {step === "district" && (
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={district}
-            disabled={disabled}
-            onChange={(e) => setDistrict(e.target.value)}
-            className="rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-saffron/60"
-          >
-            <option value="">—</option>
-            {DISTRICTS.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            disabled={disabled || !district}
-            onClick={() => onAnswer("district", district)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-ink px-4 py-2.5 text-sm text-paper transition hover:opacity-90 disabled:opacity-40"
-          >
-            {copy.districtAction} <ArrowRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      )}
     </div>
   );
 }

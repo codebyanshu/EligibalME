@@ -1,4 +1,4 @@
-import { CATEGORIES, GENDERS, INCOME_BANDS, OCCUPATIONS } from "@/data/taxonomy";
+import { CATEGORIES, GENDERS, INCOME_BANDS, OCCUPATIONS } from "../data/taxonomy.js";
 
 const money = (n) => "₹" + new Intl.NumberFormat("en-IN").format(n);
 

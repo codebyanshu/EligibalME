@@ -12,7 +12,7 @@ Copy-Item recommendation_api/.env.example recommendation_api/.env
 python -m uvicorn recommendation_api.main:app --reload --port 8000
 ```
 
-Set `VITE_SCHEME_API_URL=http://localhost:8000` in the frontend's `.env.local`, then restart Vite. The UI falls back to its existing curated recommendations and Base44 answer function when this variable is absent or the service is unavailable.
+Set `VITE_SCHEME_API_URL=http://localhost:8000` in the frontend's `.env.local`, then restart Vite. The UI falls back to its bundled catalogue and local rule-based answers when this variable is absent or the service is unavailable.
 
 The default retriever combines word and character TF-IDF, which handles spelling variations and mixed scripts without downloading a model. To add multilingual semantic embeddings, install `recommendation_api/requirements-embeddings.txt` and set `USE_MULTILINGUAL_EMBEDDINGS=true`. The first run downloads `intfloat/multilingual-e5-small`; keep the model and index on the server.
 

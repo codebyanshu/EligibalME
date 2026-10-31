@@ -1,11 +1,8 @@
-import { CENTRAL_SCHEMES } from "./central";
-import { PUNJAB_SCHEMES } from "./punjab";
+import { CENTRAL_SCHEMES } from "./central.js";
 
-export const ALL_SCHEMES = [...CENTRAL_SCHEMES, ...PUNJAB_SCHEMES];
+export const ALL_SCHEMES = CENTRAL_SCHEMES;
 
 export const SCHEME_COUNT = ALL_SCHEMES.length;
-export const CENTRAL_COUNT = CENTRAL_SCHEMES.length;
-export const STATE_COUNT = PUNJAB_SCHEMES.length;
 
 export const getScheme = (id) => ALL_SCHEMES.find((s) => s.id === id);
 

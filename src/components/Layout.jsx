@@ -1,9 +1,11 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "@/lib/AuthContext";
 import { LANGUAGES } from "@/data/taxonomy";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { Scale } from "lucide-react";
+import { LogOut, Scale } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const LANG_KEY = "haqdaar.lang";
 
@@ -11,6 +13,7 @@ export default function Layout({ lang, onLangChange }) {
   const copy = t(lang);
   const location = useLocation();
   const [localLang, setLocalLang] = useState(() => localStorage.getItem(LANG_KEY) || "en");
+  const { logout } = useAuth();
   const active = lang || localLang;
   const setLang = onLangChange || ((next) => {
     setLocalLang(next);
@@ -58,6 +61,12 @@ export default function Layout({ lang, onLangChange }) {
               >
                 {copy.navSchemes}
               </NavLink>
+              <NavLink
+                to="/applications"
+                className={({ isActive }) => cn("rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition hover:text-foreground", isActive && "bg-secondary text-foreground")}
+              >
+                {copy.navApplications}
+              </NavLink>
             </nav>
             <div className="flex items-center rounded-xl border border-border bg-card/70 p-0.5">
               {LANGUAGES.map((l) => (
@@ -77,6 +86,15 @@ export default function Layout({ lang, onLangChange }) {
                 </button>
               ))}
             </div>
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={() => logout()}
+              className="hidden h-9 items-center gap-1.5 rounded-xl border border-border bg-card/70 px-3 text-xs text-muted-foreground transition hover:text-foreground md:inline-flex"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              {active === "hi" ? "लॉग आउट" : active === "pa" ? "ਲੌਗ ਆਉਟ" : "Log out"}
+            </button>
           </div>
         </div>
       </header>

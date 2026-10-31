@@ -1,5 +1,4 @@
-const WIX_MEDIA_HOSTS = {
-  "media.base44.com": "/images/public/",
+const MEDIA_HOSTS = {
   "static.wixstatic.com": "/media/",
 }
 
@@ -23,14 +22,6 @@ export function splitImageProps(props) {
   return { wrapperProps, imageProps }
 }
 
-export function getImagePreviewClassName(className, currentClassName, baselineClassName) {
-  const sourceClasses = new Set((className || "").split(/\s+/))
-  const baselineClasses = new Set(baselineClassName.split(/\s+/))
-  return currentClassName.split(/\s+/).filter((token) =>
-    !["inline-block", "relative"].includes(token) || !baselineClasses.has(token) || sourceClasses.has(token)
-  ).join(" ")
-}
-
 /** Returns transform metadata only for canonical public Wix image URLs. */
 export function parseWixMediaUrl(src) {
   try {
@@ -44,7 +35,7 @@ export function parseWixMediaUrl(src) {
       return null
     }
 
-    const pathPrefix = WIX_MEDIA_HOSTS[url.hostname]
+    const pathPrefix = MEDIA_HOSTS[url.hostname]
     if (!pathPrefix) return null
 
     const transformed = url.pathname.match(/^(.*)\/v1\/(?:fill|fit)\/[^/]+\/[^/]+$/i)
@@ -95,10 +86,6 @@ export function buildSrcSet(parsed, options) {
         height: options.height ? options.height * dpr : undefined,
       })} ${dpr}x`
   ).join(", ")
-}
-
-export function getOriginalImageUrl(src, parsed) {
-  return parsed?.baseUrl || src
 }
 
 export function nextImageLoadMode(mode) {

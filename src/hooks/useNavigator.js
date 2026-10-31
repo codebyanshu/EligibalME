@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ALL_SCHEMES, getScheme, schemesForQuestion } from "@/data/schemes";
+import { ALL_SCHEMES } from "@/data/schemes";
 import { rankSchemes } from "@/lib/eligibility";
 import { answerLocally } from "@/lib/answerEngine";
-import { base44 } from "@/api/base44Client";
 import { askCatalog, discoverWebSchemes, getCatalogRecommendations, hasSchemeApi } from "@/lib/schemeApi";
+import { appApi } from "@/lib/appApi";
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 export const PROFILE_KEY = "haqdaar.profile";
@@ -79,42 +79,13 @@ export default function useNavigator(lang = "en") {
               return;
             }
           } catch {
-            // Keep the existing Base44 assistant available if the retrieval API is offline.
+            // Keep local recommendations available if the retrieval API is offline.
           }
         }
-        const shortcutIds = schemesForQuestion(trimmed, 4);
-        const matchIds = rankSchemes(ALL_SCHEMES, profile)
-          .slice(0, 3)
-          .map((r) => r.scheme.id);
-        const schemeIds = Array.from(new Set([...shortcutIds, ...matchIds])).slice(0, 6);
-        const res = await base44.functions.invoke("askSchemeAssistant", {
-          question: trimmed,
-          language: lang,
-          schemeIds,
-          profile: consent
-            ? {
-                age: profile.age,
-                gender: profile.gender,
-                occupation: profile.occupation,
-                categories: profile.categories,
-                incomeBand: profile.incomeBand,
-                district: profile.district,
-                state: profile.state,
-              }
-            : null,
-        });
-        const data = res.data || {};
-        if (data.answer) {
-          push({
-            role: "bot",
-            type: "answer",
-            text: data.answer,
-            citations: (data.citedIds || []).map(getScheme).filter(Boolean),
-          });
-        } else {
-          respondFromDocuments(trimmed);
-        }
-      } catch (error) {
+        const localAnswer = answerLocally(trimmed, lang);
+        if (localAnswer) push({ role: "bot", type: "answer", text: localAnswer.text, citations: localAnswer.citations, local: true });
+        else respondFromDocuments(trimmed);
+      } catch {
         respondFromDocuments(trimmed);
       } finally {
         setPending(false);
@@ -152,6 +123,20 @@ export default function useNavigator(lang = "en") {
       if (consent) {
         localStorage.setItem(PROFILE_KEY, JSON.stringify(finalProfile));
         setHasSaved(true);
+      }
+      try {
+        const telegram = await appApi("/telegram/status");
+        if (telegram.schemeAlertsEnabled) {
+          await appApi("/telegram/scheme-alerts", { method: "PUT", body: { profile: finalProfile } });
+        }
+      } catch (error) {
+        if (error.status !== 401) {
+          push({
+            role: "bot",
+            type: "text",
+            text: `Telegram match alerts could not be updated: ${error.message}`,
+          });
+        }
       }
     },
     [consent, push],
@@ -205,19 +190,7 @@ export default function useNavigator(lang = "en") {
         const nextProfile = { ...profile, state: value };
         setProfile(nextProfile);
         push({ role: "user", type: "text", text: value });
-        if (value === "Punjab") {
-          setStep("district");
-          push({ role: "bot", type: "question", step: "district" });
-        } else {
-          finish(nextProfile);
-        }
-        return;
-      }
-      if (current === "district") {
-        const finalProfile = { ...profile, district: value };
-        setProfile(finalProfile);
-        push({ role: "user", type: "text", text: value });
-        finish(finalProfile);
+        finish(nextProfile);
       }
     },
     [finish, nextStep, profile, push],
@@ -249,16 +222,15 @@ export default function useNavigator(lang = "en") {
   }, []);
 
   const stepIndex = useMemo(() => {
-    if (step === "district" && profile.state === "Punjab") return STEPS.length + 1;
     const i = STEPS.indexOf(step);
     return i >= 0 ? i + 1 : 0;
-  }, [profile.state, step]);
+  }, [step]);
 
   return {
     messages,
     step,
     stepIndex,
-    totalSteps: STEPS.length + (profile.state === "Punjab" ? 1 : 0),
+    totalSteps: STEPS.length,
     profile,
     consent,
     pending,

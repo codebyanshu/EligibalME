@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { appAuthApi } from "@/lib/appApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,7 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      await base44.auth.resetPassword({ resetToken, newPassword });
+      await appAuthApi.resetPassword(resetToken, newPassword);
       window.location.href = "/login";
     } catch (err) {
       setError(err.message || "Failed to reset password");
@@ -73,6 +73,8 @@ export default function ResetPassword() {
               id="password"
               type="password"
               autoComplete="new-password"
+              minLength={12}
+              maxLength={128}
               autoFocus
               placeholder="••••••••"
               value={newPassword}
@@ -81,6 +83,7 @@ export default function ResetPassword() {
               required
             />
           </div>
+          <p className="text-xs text-muted-foreground">Use 12–128 characters.</p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm">Confirm Password</Label>
@@ -90,6 +93,8 @@ export default function ResetPassword() {
               id="confirm"
               type="password"
               autoComplete="new-password"
+              minLength={12}
+              maxLength={128}
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}

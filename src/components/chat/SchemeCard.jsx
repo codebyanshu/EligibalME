@@ -1,4 +1,5 @@
 import { DOCUMENTS } from "@/data/taxonomy";
+import { Link } from "react-router-dom";
 import { describeCheck } from "@/lib/eligibility";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight, Check, FileText, Info, TriangleAlert } from "lucide-react";
@@ -95,6 +96,9 @@ export default function SchemeCard({ row, lang, copy }) {
           </a>}
           {(scheme.dept || scheme.category) && <span className="text-[10px] text-muted-foreground">{scheme.dept || scheme.category}</span>}
         </div>
+        <Link to={`/applications?scheme=${encodeURIComponent(scheme.id)}&name=${encodeURIComponent(name)}${scheme.link ? `&url=${encodeURIComponent(scheme.link)}` : ""}`} className="inline-flex text-xs font-medium text-leaf hover:underline">
+          {copy.trackApplication}
+        </Link>
       </div>
     </article>
   );

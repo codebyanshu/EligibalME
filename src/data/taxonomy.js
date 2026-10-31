@@ -61,15 +61,7 @@ export const DOCUMENTS = {
   mcp_card: { en: "Mother & Child Protection card", hi: "माता एवं शिशु सुरक्षा कार्ड", pa: "ਮਾਂ ਤੇ ਬੱਚਾ ਸੁਰੱਖਿਆ ਕਾਰਡ" },
   sports_cert: { en: "Sports achievement certificate", hi: "खेल उपलब्धि प्रमाण पत्र", pa: "ਖੇਡ ਪ੍ਰਾਪਤੀ ਸਰਟੀਫਿਕੇਟ" },
   medical_cert: { en: "Medical fitness certificate", hi: "चिकित्सा फिटनेस प्रमाण पत्र", pa: "ਮੈਡੀਕਲ ਫਿਟਨੈਸ ਸਰਟੀਫਿਕੇਟ" },
-  domicile: { en: "Punjab domicile certificate", hi: "पंजाब अधिवास प्रमाण पत्र", pa: "ਪੰਜਾਬ ਡੋਮੀਸਾਈਲ ਸਰਟੀਫਿਕੇਟ" },
 };
-
-export const DISTRICTS = [
-  "Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka",
-  "Ferozepur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana",
-  "Malerkotla", "Mansa", "Moga", "Pathankot", "Patiala", "Rupnagar",
-  "S.A.S. Nagar (Mohali)", "Sangrur", "Shaheed Bhagat Singh Nagar", "Sri Muktsar Sahib", "Tarn Taran",
-];
 
 export const CATEGORY_GROUPS = [
   { key: "farmer", label: { en: "Farmers", hi: "किसान", pa: "ਕਿਸਾਨ" } },
